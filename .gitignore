@@ -1,0 +1,26 @@
+# Maven
+target/
+*.jar
+*.war
+*.ear
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+bin/
+
+# Операционные системы
+.DS_Store
+Thumbs.db
+
+# Логи
+*.log
+
+# Системные файлы
+*.bak
+*.tmp
