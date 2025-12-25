@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Система складского учета</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Складской учет</h1>
+            <div>
+              <button id="manageReferencesBtn" class="btn btn-outline" style="margin-right: 10px;">
+                📚 Справочники
+              </button>
+              <button id="addProductBtn" class="btn btn-primary">Добавить товар</button>
+            </div>
+        </header>
+
+        <section class="filters">
+            <h2>Фильтры</h2>
+            <div class="filter-group">
+                <label for="manufacturerFilter">Производитель:</label>
+                <select id="manufacturerFilter">
+                    <option value="">Все</option>
+                </select>
+
+                <label for="typeFilter">Тип товара:</label>
+                <select id="typeFilter">
+                    <option value="">Все</option>
+                </select>
+
+                <label for="minPrice">Цена от:</label>
+                <input type="number" id="minPrice" placeholder="Мин.">
+
+                <label for="maxPrice">Цена до:</label>
+                <input type="number" id="maxPrice" placeholder="Макс.">
+
+                <button id="applyFilters" class="btn btn-secondary">Применить</button>
+                <button id="resetFilters" class="btn btn-outline">Сбросить</button>
+            </div>
+        </section>
+
+        <section class="products-table">
+            <h2>Список товаров</h2>
+            <div id="loadingMessage">Загрузка...</div>
+            <table id="productsTable" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Наименование</th>
+                        <th>Производитель</th>
+                        <th>Тип</th>
+                        <th>Цена</th>
+                        <th>Количество</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody id="productsTableBody">
+                    <!-- Данные будут загружены через JS -->
+                </tbody>
+            </table>
+            <div id="paginationControls" class="pagination"></div>
+        </section>
+    </div>
+
+    <!-- Модальное окно для добавления/редактирования товара -->
+    <div id="productModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modalTitle">Добавить товар</h2>
+            <form id="productForm">
+                <input type="hidden" id="productId">
+                <div class="form-group">
+                    <label for="productName">Наименование *</label>
+                    <input type="text" id="productName" name="name" required>
+                    <span class="error-message" id="nameError"></span>
+                </div>
+                <div class="form-group">
+                    <label for="productDescription">Описание</label>
+                    <textarea id="productDescription" name="description"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="productManufacturer">Производитель *</label>
+                    <select id="productManufacturer" name="manufacturer_id" required>
+                        <option value="">Выберите производителя</option>
+                    </select>
+                    <span class="error-message" id="manufacturerError"></span>
+                </div>
+                <div class="form-group">
+                    <label for="productType">Тип товара *</label>
+                    <select id="productType" name="type_id" required>
+                        <option value="">Выберите тип</option>
+                    </select>
+                    <span class="error-message" id="typeError"></span>
+                </div>
+                <div class="form-group">
+                    <label for="productPrice">Цена *</label>
+                    <input type="number" id="productPrice" name="price" step="0.01" min="0" required>
+                    <span class="error-message" id="priceError"></span>
+                </div>
+                <div class="form-group">
+                    <label for="productQuantity">Количество *</label>
+                    <input type="number" id="productQuantity" name="quantity" min="0" required>
+                    <span class="error-message" id="quantityError"></span>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                    <button type="button" id="cancelBtn" class="btn btn-outline">Отмена</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно для справочников -->
+    <div id="referencesModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 600px;">
+            <span class="close" id="closeReferences">&times;</span>
+            <h2>📚 Управление справочниками</h2>
+
+            <!-- Вкладки -->
+            <div class="tabs-container">
+                <button class="tab-btn active" data-tab="manufacturers">Производители</button>
+                <button class="tab-btn" data-tab="types">Типы товаров</button>
+            </div>
+
+            <!-- Вкладка производителей -->
+            <div id="manufacturersTab" class="tab-content active">
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <input type="text" id="newManufacturerName" placeholder="Название производителя"
+                           style="flex: 1; padding: 8px;">
+                    <button id="addManufacturerBtn" class="btn btn-secondary">+ Добавить</button>
+                </div>
+
+                <table style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Название</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="manufacturersTableBody">
+                        <!-- Данные загрузятся через JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Вкладка типов товаров -->
+            <div id="typesTab" class="tab-content" style="display: none;">
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <input type="text" id="newTypeName" placeholder="Название типа товара"
+                           style="flex: 1; padding: 8px;">
+                    <button id="addTypeBtn" class="btn btn-secondary">+ Добавить</button>
+                </div>
+
+                <table style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Название</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="typesTableBody">
+                        <!-- Данные загрузятся через JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
